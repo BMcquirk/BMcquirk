@@ -1,0 +1,85 @@
+---
+title: "Robert_McQuirk_wk2"
+output: html_document
+---
+
+```{r setup, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Overview
+
+After reviewing a lot of different plots and graphs on a couple of websites, I decided to use two line chart examples to develop my own visualization. The first line chart example that I wanted to pull from can be found at the following link, https://www.r-graph-gallery.com/line_chart_annotation.html. I wanted to build a chart like this, with some annotations on it, and also make it an interactive visualization. to make my new chart interactive I borrowed some ideas from the plotly section of the R Gallery which can be found at https://www.r-graph-gallery.com/163-interactive-area-chart-plotly.html. 
+
+
+## Developing the Base
+The first step to creating my visualization involved copying the R code from the annotated line chart section of the R Gallery website referenced above.
+
+1) The first step to building my visualization involved idenftifying and procuing my data set. I am replacing the bitcoin data set used in the example with one that I am pulling in through an API called Alpha Vantage. Alpha Vantage provides an API that allows you to obtain alot of different types of data on equities for free at https://www.alphavantage.co/. I have decided to create an interactive time series visualization using the daily stock price of Tesla. 
+
+## Required Packages
+
+The following packages will need to be installed for the code in the following chunks to run
+
+- **rmarkdown** --- install.packages("rmarkdown")
+- **tidyverse** --- install.packages("tidyverse")
+- **bookdown** --- install.packages("bookdown")
+- **ggplot2** --- install.packages("ggplot2")
+- **Plotly** --- install.packages("plotly")
+- **hrbrthemes** --- install.packages("hrbrthemes")
+- **alphavantager** --- install.packages("alphavantager")
+
+## Creating the Dataset
+
+The code below allows me to pull in the daily closing price of Tesla stock from the day it began trading on the NYSE. I can then turn it into a dataframe that I am going to use for my base line chat. 
+
+```{r TSLA Data Set, echo=TRUE, warning=FALSE}
+
+#The alphavantager library lets me connect to the API hosted by Alpha Vantage. 
+library(alphavantager)
+
+#The av_api_key function accepts an argument that is my personal key to access the alpha vantage API
+#You can obtain a free API key here, https://www.alphavantage.co/support/#api-key.
+av_api_key("InsertKeyHere")
+
+#The av_get function that I am using below will build the dataframe that I will use to build my line chart that plots the daily closing price of Tesla stock. The symbol sub function is how I identify to the API What stock symbol I am wanting data on. The symbol function takes an argument for that is the ticker symbol of the company you are wanting information on. The av_fun function allows me to identify that I want the daily historical information. The outputsize function allows me to indicate the time series for the dateset. 
+
+TSLA <- av_get(symbol = "TSLA", 
+       av_fun = "TIME_SERIES_DAILY",
+       outputsize = "full")
+```
+
+## Building the Plot & Making it Interactive
+
+Now that I have my dateset complete I want to make my annotated plot that displays the stock price of Tesla from 2010 to today. 
+
+Once the plot is built I want to make it somewhat interactive for the user. I enjoy going to websites and checking out the charts, especially the ones that allow you to see what the closing value was on a specific day when hovering over the datapoint. I am able to do this my using the plotly package.
+
+```{r Tesla Data, echo=TRUE, fig.cap = '(Telsa Plot)', warning=FALSE, message=FALSE}
+
+#These are the libraries that I will need to create my plot
+library(ggplot2)
+library(hrbrthemes)
+library(plotly)
+
+#I am creating the plot that will have the entire timeseries of the dataset on the X axis and the price per share on the Y axis. I also put a bold red line at the $150 dollar value of the yaxis because the stock price crossed over that point in 2012 and never came back down below it. I also added some labels to X & Y axis and gave the chart a title
+
+#I am capturing the plot in a variable so that I can add the interactive some cool functionality to the chart. 
+TSLA_Plot_Data <- ggplot(data=TSLA, aes(x=timestamp, y=close)) +
+    geom_line(color="#4934eb") +
+    ggtitle("Telsa Stock Price 2010 - 2020") +
+    xlab("Years") +
+    ylab("Price Per Share") +
+    ylim(0,850) +
+    geom_hline(yintercept=150, color="red", size=1) +
+    annotate(geom="text", x=as.Date("2018-11-06"), y=825,label="$923 High") +
+    annotate(geom="point", x=as.Date("2020-02-10"), y=800, size=10, shape=21, fill="transparent") +
+    theme_ipsum()
+
+#the plotly function lets me make my visualization inter active by letting the viewer hover over the line and see the value in a popup box next to the mouse pointer. 
+ggplotly(TSLA_Plot_Data)
+
+```
+
+
+ 
